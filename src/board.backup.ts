@@ -4,7 +4,7 @@ import { BoardMatrix } from "./board-matrix";
 import { validityChecker } from "./validity-checker";
 import { toZeroBased } from "./utils";
 
-const unit = 80;
+const unit = 64;
 
 type GridAxis = "gridRowStart" | "gridColumnStart";
 
@@ -20,11 +20,11 @@ export class Board {
   blocks: Block[];
   walls: Wall[];
   gates: Gate[];
-  refX: number;
-  refY: number;
+  referenceX: number;
+  referenceY: number;
   dragging = false;
 
-  private activeElement: Element;
+  private activeElement: HTMLDivElement;
   private activeBlock: Block | TargetBlock;
 
   constructor(config: BoardConfig) {
@@ -68,7 +68,8 @@ export class Board {
     const element = event.target as HTMLDivElement;
     if (element.hasAttribute("movable")) {
       this.dragging = true;
-      this.setReferenceValues(event);
+      this.referenceX = event.clientX;
+      this.referenceY = event.clientY;
       this.activeElement = element;
       this.activeBlock = this.getBlock(element);
       this.activeBlock.elements.forEach(e => {
@@ -83,17 +84,101 @@ export class Board {
     if (!this.dragging) return;
 
     const { clientX, clientY } = event;
-    const { top, bottom, left, right } = this.activeElement.getBoundingClientRect();
     const elementBelow = document.elementFromPoint(clientX, clientY) as HTMLDivElement;
+    const clientRect = this.activeElement.getBoundingClientRect();
 
-    if (elementBelow !== this.activeElement && clientY > Math.ceil(top) && clientY < Math.floor(bottom)) {
-      if (clientX > this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", 1);
-      if (clientX < this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", -1);
+    if (
+      elementBelow !== this.activeElement &&
+      clientY > Math.ceil(clientRect.top) &&
+      clientY < Math.floor(clientRect.bottom)
+    ) {
+      if (clientX > this.referenceX) {
+        const canMove = this.canMove(this.activeBlock, "gridColumnStart", 1);
+        if (canMove) {
+          console.log("X");
+          this.changeGridPosition(this.activeBlock.elements, "gridColumnStart", 1);
+          this.setReferenceValues(event);
+        } else {
+          if (this.activeBlock.elements.includes(elementBelow)) {
+            this.activeElement = elementBelow;
+            this.setReferenceValues(event);
+          } else {
+            this.dragging = false;
+            this.activeBlock.elements.forEach(element => {
+              const row = toZeroBased(element.style.gridRowStart);
+              const column = toZeroBased(element.style.gridColumnStart);
+              this.coverageMatrix[row][column] = true;
+            });
+          }
+        }
+      }
+      if (clientX < this.referenceX) {
+        const canMove = this.canMove(this.activeBlock, "gridColumnStart", -1);
+        if (canMove) {
+          console.log("X");
+          this.changeGridPosition(this.activeBlock.elements, "gridColumnStart", -1);
+          this.setReferenceValues(event);
+        } else {
+          if (this.activeBlock.elements.includes(elementBelow)) {
+            this.activeElement = elementBelow;
+            this.setReferenceValues(event);
+          } else {
+            this.dragging = false;
+            this.activeBlock.elements.forEach(element => {
+              const row = toZeroBased(element.style.gridRowStart);
+              const column = toZeroBased(element.style.gridColumnStart);
+              this.coverageMatrix[row][column] = true;
+            });
+          }
+        }
+      }
     }
 
-    if (elementBelow !== this.activeElement && clientX > Math.ceil(left) && clientX < Math.floor(right)) {
-      if (clientY > this.refY) this.moveHandler(event, elementBelow, "gridRowStart", 1);
-      if (clientY < this.refY) this.moveHandler(event, elementBelow, "gridRowStart", -1);
+    if (
+      elementBelow !== this.activeElement &&
+      clientX > Math.ceil(clientRect.left) &&
+      clientX < Math.floor(clientRect.right)
+    ) {
+      if (clientY > this.referenceY) {
+        const canMove = this.canMove(this.activeBlock, "gridRowStart", 1);
+        if (canMove) {
+          console.log("Y");
+          this.changeGridPosition(this.activeBlock.elements, "gridRowStart", 1);
+          this.setReferenceValues(event);
+        } else {
+          if (this.activeBlock.elements.includes(elementBelow)) {
+            this.activeElement = elementBelow;
+            this.setReferenceValues(event);
+          } else {
+            this.dragging = false;
+            this.activeBlock.elements.forEach(element => {
+              const row = toZeroBased(element.style.gridRowStart);
+              const column = toZeroBased(element.style.gridColumnStart);
+              this.coverageMatrix[row][column] = true;
+            });
+          }
+        }
+      }
+      if (clientY < this.referenceY) {
+        const canMove = this.canMove(this.activeBlock, "gridRowStart", -1);
+        if (canMove) {
+          console.log("Y");
+          this.changeGridPosition(this.activeBlock.elements, "gridRowStart", -1);
+          this.setReferenceValues(event);
+        } else {
+          if (this.activeBlock.elements.includes(elementBelow)) {
+            this.activeElement = elementBelow;
+            this.setReferenceValues(event);
+          } else {
+            this.dragging = false;
+            this.activeBlock.elements.forEach(element => {
+              const row = toZeroBased(element.style.gridRowStart);
+              const column = toZeroBased(element.style.gridColumnStart);
+              this.coverageMatrix[row][column] = true;
+            });
+          }
+        }
+      }
     }
   };
 
@@ -102,7 +187,6 @@ export class Board {
       row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
       column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
     }));
-    console.log(targetCells);
 
     const canMove = targetCells.every(cell => {
       return (
@@ -117,30 +201,20 @@ export class Board {
     return canMove;
   }
 
-  private moveBlock(block: Block | TargetBlock, axis: GridAxis, direction: -1 | 1) {
-    block.elements.forEach(element => (element.style[axis] = (parseInt(element.style[axis]) + direction).toString()));
-  }
-
-  private moveHandler(event: MouseEvent, elementBelow: HTMLDivElement, axis: GridAxis, direction: -1 | 1) {
-    if (this.canMove(this.activeBlock, axis, direction)) {
-      this.moveBlock(this.activeBlock, axis, direction);
-      this.setReferenceValues(event);
-    } else if (this.activeBlock.elements.includes(elementBelow)) {
-      this.activeElement = elementBelow;
-      this.setReferenceValues(event);
-    } else {
-      this.dragging = false;
-      this.activeBlock.elements.forEach(element => {
-        const row = toZeroBased(element.style.gridRowStart);
-        const column = toZeroBased(element.style.gridColumnStart);
-        this.coverageMatrix[row][column] = true;
-      });
-    }
+  private changeGridPosition(elements: HTMLElement[], axis: GridAxis, direction: -1 | 1) {
+    elements.forEach(element => (element.style[axis] = (parseInt(element.style[axis]) + direction).toString()));
   }
 
   private setReferenceValues(event: MouseEvent) {
-    this.refX = event.clientX;
-    this.refY = event.clientY;
+    this.referenceX = event.clientX;
+    this.referenceY = event.clientY;
+  }
+
+  private setReferenceValues2(element: HTMLElement) {
+    const clientRect = element.getBoundingClientRect();
+    this.referenceX = (clientRect.left + clientRect.right) / 2;
+    this.referenceY = (clientRect.top + clientRect.bottom) / 2;
+    console.log(this.referenceX, this.referenceY);
   }
 
   private onMouseUp = () => {
@@ -305,7 +379,7 @@ export class Board {
 
   destroy() {
     this.element.removeEventListener("mousedown", this.onMouseDown);
-    document.removeEventListener("mousemove", this.onMouseMove);
-    document.removeEventListener("mouseup", this.onMouseUp);
+    this.element.removeEventListener("mousemove", this.onMouseMove);
+    this.element.removeEventListener("mouseup", this.onMouseUp);
   }
 }
