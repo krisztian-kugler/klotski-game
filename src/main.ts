@@ -13,7 +13,7 @@ const board = new Board({
     [
       { column: 1, row: 1 },
       { column: 1, row: 2 },
-      { column: 1, row: 3 },
+      { column: 2, row: 2 },
     ],
     [
       { column: 4, row: 4 },

@@ -1,10 +1,12 @@
-import { BoardConfig } from "./models";
+import { BoardConfig, GridCell } from "./models";
 import { Entity, Block, Wall, Gate, TargetBlock, TargetZone } from "./entities";
 import { BoardMatrix } from "./board-matrix";
 import { validityChecker } from "./validity-checker";
 import { toZeroBased } from "./utils";
 
 const unit = 80;
+
+type GridAxis = "gridRowStart" | "gridColumnStart";
 
 export class Board {
   element: HTMLDivElement;
@@ -18,8 +20,8 @@ export class Board {
   blocks: Block[];
   walls: Wall[];
   gates: Gate[];
-  currentX: number;
-  currentY: number;
+  referenceX: number;
+  referenceY: number;
   dragging = false;
 
   private activeElement: HTMLDivElement;
@@ -56,22 +58,20 @@ export class Board {
 
     this.init();
 
-    this.element.addEventListener("pointerdown", this.onMouseDown);
-    this.element.addEventListener("pointermove", this.onMouseMove);
-    this.element.addEventListener("pointerup", this.onMouseUp);
+    this.element.addEventListener("mousedown", this.onMouseDown);
+    document.addEventListener("mousemove", this.onMouseMove);
+    document.addEventListener("mouseup", this.onMouseUp);
   }
 
   private onMouseDown = (event: MouseEvent) => {
-    event.preventDefault(); // Needed, because mouseup won't allways fire if the mousedown handler is processing.
-    console.log("mouse down");
-    const element = event.target as HTMLElement;
-    if (element.classList.contains("block")) {
+    event.preventDefault();
+    const element = event.target as HTMLDivElement;
+    if (element.hasAttribute("movable")) {
       this.dragging = true;
-      this.currentX = event.clientX;
-      this.currentY = event.clientY;
-      this.activeElement = element as HTMLDivElement;
+      this.referenceX = event.clientX;
+      this.referenceY = event.clientY;
+      this.activeElement = element;
       this.activeBlock = this.getBlock(element);
-      console.log(this.activeBlock);
       this.activeBlock.elements.forEach(e => {
         const row = toZeroBased(e.style.gridRowStart);
         const column = toZeroBased(e.style.gridColumnStart);
@@ -83,113 +83,114 @@ export class Board {
   private onMouseMove = (event: MouseEvent) => {
     if (!this.dragging) return;
 
-    if (this.activeBlock.elements.includes(document.elementFromPoint(event.clientX, event.clientY) as HTMLDivElement)) {
+    const clientX = event.clientX;
+    const clientY = event.clientY;
+    const elementBelow = document.elementFromPoint(clientX, clientY) as HTMLDivElement;
+
+    if (this.activeBlock.elements.includes(elementBelow) && this.activeElement !== event.target) {
       this.activeElement = event.target as HTMLDivElement;
     }
 
     const clientRect = this.activeElement.getBoundingClientRect();
 
     if (
-      Math.abs(this.currentX - event.clientX) > unit ||
-      (document.elementFromPoint(event.clientX, event.clientY) !== this.activeElement &&
-        event.clientY > clientRect.top &&
-        event.clientY < clientRect.bottom)
+      (elementBelow !== this.activeElement && clientY > clientRect.top && clientY < clientRect.bottom) ||
+      Math.abs(this.referenceX - clientX) > unit
     ) {
-      if (event.clientX > this.currentX) {
+      if (event.clientX > this.referenceX) {
         const canMove = this.canMove(this.activeBlock, "gridColumnStart", 1);
         if (canMove) {
           this.changeGridPosition(this.activeBlock.elements, "gridColumnStart", 1);
-          this.setCurrentValues(event);
+          this.setReferenceValues(event);
         } else {
-          this.dragging = false;
+          /* this.dragging = false;
           this.activeBlock.elements.forEach(element => {
             const row = toZeroBased(element.style.gridRowStart);
             const column = toZeroBased(element.style.gridColumnStart);
             this.coverageMatrix[row][column] = true;
-          });
+          }); */
         }
       }
-      if (event.clientX < this.currentX) {
+      if (event.clientX < this.referenceX) {
         const canMove = this.canMove(this.activeBlock, "gridColumnStart", -1);
         if (canMove) {
           this.changeGridPosition(this.activeBlock.elements, "gridColumnStart", -1);
-          this.setCurrentValues(event);
+          this.setReferenceValues(event);
         } else {
-          this.dragging = false;
+          /* this.dragging = false;
           this.activeBlock.elements.forEach(element => {
             const row = toZeroBased(element.style.gridRowStart);
             const column = toZeroBased(element.style.gridColumnStart);
             this.coverageMatrix[row][column] = true;
-          });
+          }); */
         }
       }
     }
 
     if (
-      Math.abs(this.currentY - event.clientY) > unit ||
       (document.elementFromPoint(event.clientX, event.clientY) !== this.activeElement &&
         event.clientX > clientRect.left &&
-        event.clientX < clientRect.right)
+        event.clientX < clientRect.right) ||
+      Math.abs(this.referenceY - event.clientY) > unit
     ) {
-      if (event.clientY > this.currentY) {
+      if (event.clientY > this.referenceY) {
         const canMove = this.canMove(this.activeBlock, "gridRowStart", 1);
         if (canMove) {
           this.changeGridPosition(this.activeBlock.elements, "gridRowStart", 1);
-          this.setCurrentValues(event);
+          this.setReferenceValues(event);
         } else {
-          this.dragging = false;
+          /* this.dragging = false;
           this.activeBlock.elements.forEach(element => {
             const row = toZeroBased(element.style.gridRowStart);
             const column = toZeroBased(element.style.gridColumnStart);
             this.coverageMatrix[row][column] = true;
-          });
+          }); */
         }
       }
-      if (event.clientY < this.currentY) {
+      if (event.clientY < this.referenceY) {
         const canMove = this.canMove(this.activeBlock, "gridRowStart", -1);
         if (canMove) {
           this.changeGridPosition(this.activeBlock.elements, "gridRowStart", -1);
-          this.setCurrentValues(event);
+          this.setReferenceValues(event);
         } else {
-          this.dragging = false;
+          /* this.dragging = false;
           this.activeBlock.elements.forEach(element => {
             const row = toZeroBased(element.style.gridRowStart);
             const column = toZeroBased(element.style.gridColumnStart);
             this.coverageMatrix[row][column] = true;
-          });
+          }); */
         }
       }
     }
   };
 
-  private canMove(block: Block, axis: "gridColumnStart" | "gridRowStart", direction: -1 | 1): boolean {
-    const newPositions = block.elements.map(element => ({
-      col: parseInt(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0) - 1,
-      row: parseInt(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0) - 1,
+  private canMove(block: Block | TargetBlock, axis: GridAxis, direction: 1 | -1): boolean {
+    const targetCells: GridCell[] = block.elements.map(element => ({
+      row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
+      column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
     }));
-    console.log(newPositions);
+    console.log(targetCells);
 
-    const canMove = newPositions.every(pos => {
+    const canMove = targetCells.every(cell => {
       return (
-        !this.coverageMatrix[pos.row][pos.col] &&
-        pos.row >= 0 &&
-        pos.row <= this.rows - 1 &&
-        pos.col >= 0 &&
-        pos.col <= this.columns - 1
+        cell.row >= 0 &&
+        cell.row <= this.rows - 1 &&
+        cell.column >= 0 &&
+        cell.column <= this.columns - 1 &&
+        !this.coverageMatrix[cell.row][cell.column]
       );
     });
 
-    console.log(canMove);
     return canMove;
   }
 
-  private changeGridPosition(elements: HTMLElement[], axis: "gridColumnStart" | "gridRowStart", direction: -1 | 1) {
+  private changeGridPosition(elements: HTMLElement[], axis: GridAxis, direction: -1 | 1) {
     elements.forEach(element => (element.style[axis] = (parseInt(element.style[axis]) + direction).toString()));
   }
 
-  private setCurrentValues(event: MouseEvent) {
-    this.currentX = event.clientX;
-    this.currentY = event.clientY;
+  private setReferenceValues(event: MouseEvent) {
+    this.referenceX = event.clientX;
+    this.referenceY = event.clientY;
   }
 
   private onMouseUp = () => {
@@ -225,8 +226,6 @@ export class Board {
         const right = +element.style.gridColumnStart + 1;
         const top = +element.style.gridRowStart - 1;
         const bottom = +element.style.gridRowStart + 1;
-
-        console.log(col, row, left, right, top, bottom);
 
         block.cells.forEach(position => {
           if (position.column === col && position.row === top) {
@@ -298,8 +297,6 @@ export class Board {
         const top = +element.style.gridRowStart - 1;
         const bottom = +element.style.gridRowStart + 1;
 
-        console.log(col, row, left, right, top, bottom);
-
         gate.cells.forEach(position => {
           if (position.column === col && position.row === top) {
             element.classList.remove("border-top");
@@ -324,7 +321,6 @@ export class Board {
   }
 
   private setBoard() {
-    console.log(unit);
     this.element = document.createElement("div");
     this.element.classList.add("board");
     this.element.style.gridTemplate = `repeat(${this.rows}, ${unit}px) / repeat(${this.columns}, ${unit}px)`;
