@@ -8,6 +8,7 @@ body {
   display: flex;
   flex-direction: column;
   background-color: rgb(31, 33, 37);
+  background-color: rgb(122, 131, 146);
   font-family: sans-serif;
   height: 100vh;
 }
@@ -34,11 +35,12 @@ header {
   background-color: rgb(43, 46, 51);
   background-color: rgb(31, 33, 37);
   background-color: rgb(45, 48, 53);
+  background-color: rgb(147, 155, 169);
   border: 1px solid #3e485d;
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-  border-right-color: rgba(255, 255, 255, 0.1);
-  border-top-color: rgb(0, 0, 0, 0.9);
-  border-left-color: rgb(0, 0, 0, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+  border-right-color: rgba(255, 255, 255, 0.5);
+  border-top-color: rgb(0, 0, 0, 0.5);
+  border-left-color: rgb(0, 0, 0, 0.5);
 }
 
 .block {
