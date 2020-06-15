@@ -1,5 +1,5 @@
 import { BoardConfig, GridCell } from "./models";
-import { Entity, Block, Wall, Gate, TargetBlock, TargetZone } from "./entities";
+import { Entity, Block, Wall, Gate, TargetBlock, TargetZone, EntityConfig } from "./entities";
 import { BoardMatrix } from "./board-matrix";
 import { validityChecker } from "./validity-checker";
 import { toZeroBased } from "./utils";
@@ -10,20 +10,19 @@ type GridAxis = "gridRowStart" | "gridColumnStart";
 
 export class Board {
   element: HTMLDivElement;
-  coverageMatrix: boolean[][] = [];
   matrix: BoardMatrix;
   moveCount: number = 0;
   rows: number;
   columns: number;
   targetBlock: TargetBlock;
   targetZone: TargetZone;
-  blocks: Block[];
-  walls: Wall[];
-  gates: Gate[];
+  blocks: Block[] = [];
+  walls: Wall[] = [];
+  gates: Gate[] = [];
   refX: number;
   refY: number;
-  dragging = false;
-
+  entities: { [key: string]: any } = {};
+  private dragging = false;
   private activeElement: Element;
   private activeBlock: Block | TargetBlock;
 
@@ -32,89 +31,86 @@ export class Board {
     this.rows = config.rows;
     this.columns = config.columns;
     this.matrix = new BoardMatrix(this.rows, this.columns);
+    this.targetBlock = new TargetBlock(config.targetBlock, 0, true);
+    this.targetZone = new TargetZone(config.targetZone);
 
-    this.setCoverageMatrix();
+    // TODO: Move matrix initialization to entity creation / board setup phase!
+    if (config.blocks) {
+      this.blocks = config.blocks
+        .map((cellGroup, index) => new Block(cellGroup, index + 1, false))
+        .concat(this.targetBlock);
+    }
 
-    this.gates = config.gates.map(gate => {
-      this.matrix.setValues(gate, true);
-      gate.forEach(cell => {
-        this.matrix.setValue(cell.row, cell.column, true);
-        this.coverageMatrix[cell.row - 1][cell.column - 1] = true;
-      });
-      return new Gate(gate);
-    });
-
-    this.blocks = [config.targetBlock, ...config.blocks].map((block, index) => {
-      block.forEach(item => (this.coverageMatrix[item.row - 1][item.column - 1] = true));
-      return new Block(block, index, !index);
-    });
-
-    this.walls = config.walls
-      ? config.walls.map(wall => {
-          wall.forEach(item => (this.coverageMatrix[item.row - 1][item.column - 1] = true));
-          return new Wall(wall);
-        })
-      : [];
+    if (config.walls) this.walls = config.walls.map(cellGroup => this.entityFactory(Wall, cellGroup));
+    if (config.gates) this.gates = config.gates.map(cellGroup => this.entityFactory(Gate, cellGroup));
 
     this.init();
 
-    this.element.addEventListener("mousedown", this.onMouseDown);
-    document.addEventListener("mousemove", this.onMouseMove);
-    document.addEventListener("mouseup", this.onMouseUp);
+    [...this.blocks, ...this.gates, ...this.walls, this.targetBlock].forEach(entity => {
+      entity.cells.forEach(cell => this.matrix.setValue(cell.row - 1, cell.column - 1, true));
+    });
+    // upgrade updateMatrix so it can handle an array of entity inputs
+
+    this.element.addEventListener("mousedown", this.dragStart);
+    document.addEventListener("mousemove", this.dragMove);
+    document.addEventListener("mouseup", this.dragEnd);
   }
 
-  private onMouseDown = (event: MouseEvent) => {
+  private entityFactory(entity: new (...args: any[]) => Entity, cells: GridCell[], config?: EntityConfig) {
+    return new entity(cells, config);
+  }
+
+  private dragStart = (event: MouseEvent) => {
     event.preventDefault();
     const element = event.target as HTMLDivElement;
     if (element.hasAttribute("movable")) {
       this.dragging = true;
-      this.setReferenceValues(event);
       this.activeElement = element;
       this.activeBlock = this.getBlock(element);
-      this.activeBlock.elements.forEach(e => {
-        const row = toZeroBased(e.style.gridRowStart);
-        const column = toZeroBased(e.style.gridColumnStart);
-        this.coverageMatrix[row][column] = false;
-      });
+      this.updateMatrix(this.activeBlock, false);
+      this.setReferenceValues(event);
     }
   };
 
-  private onMouseMove = (event: MouseEvent) => {
+  private dragMove = (event: MouseEvent) => {
     if (!this.dragging) return;
 
     const { clientX, clientY } = event;
     const { top, bottom, left, right } = this.activeElement.getBoundingClientRect();
     const elementBelow = document.elementFromPoint(clientX, clientY) as HTMLDivElement;
 
-    if (elementBelow !== this.activeElement && clientY > Math.ceil(top) && clientY < Math.floor(bottom)) {
-      if (clientX > this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", 1);
-      if (clientX < this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", -1);
-    }
-
     if (elementBelow !== this.activeElement && clientX > Math.ceil(left) && clientX < Math.floor(right)) {
       if (clientY > this.refY) this.moveHandler(event, elementBelow, "gridRowStart", 1);
       if (clientY < this.refY) this.moveHandler(event, elementBelow, "gridRowStart", -1);
     }
+
+    if (elementBelow !== this.activeElement && clientY > Math.ceil(top) && clientY < Math.floor(bottom)) {
+      if (clientX > this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", 1);
+      if (clientX < this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", -1);
+    }
+  };
+
+  private dragEnd = () => {
+    if (!this.dragging) return;
+    this.dragging = false;
+    this.updateMatrix(this.activeBlock, true);
+    this.activeBlock = this.activeElement = this.refX = this.refY = null;
   };
 
   private canMove(block: Block | TargetBlock, axis: GridAxis, direction: 1 | -1): boolean {
-    const targetCells: GridCell[] = block.elements.map(element => ({
-      row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
-      column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
-    }));
-    console.log(targetCells);
-
-    const canMove = targetCells.every(cell => {
-      return (
-        cell.row >= 0 &&
-        cell.row <= this.rows - 1 &&
-        cell.column >= 0 &&
-        cell.column <= this.columns - 1 &&
-        !this.coverageMatrix[cell.row][cell.column]
+    return block.elements
+      .map(element => ({
+        row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
+        column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
+      }))
+      .every(
+        cell =>
+          cell.row >= 0 &&
+          cell.row <= this.rows - 1 &&
+          cell.column >= 0 &&
+          cell.column <= this.columns - 1 &&
+          !this.matrix.getValue(cell.row, cell.column)
       );
-    });
-
-    return canMove;
   }
 
   private moveBlock(block: Block | TargetBlock, axis: GridAxis, direction: -1 | 1) {
@@ -129,12 +125,7 @@ export class Board {
       this.activeElement = elementBelow;
       this.setReferenceValues(event);
     } else {
-      this.dragging = false;
-      this.activeBlock.elements.forEach(element => {
-        const row = toZeroBased(element.style.gridRowStart);
-        const column = toZeroBased(element.style.gridColumnStart);
-        this.coverageMatrix[row][column] = true;
-      });
+      this.dragEnd();
     }
   }
 
@@ -143,19 +134,11 @@ export class Board {
     this.refY = event.clientY;
   }
 
-  private onMouseUp = () => {
-    if (this.dragging) {
-      this.dragging = false;
-      this.updateCoverage(this.activeBlock, true);
-      this.activeBlock = this.activeElement = null;
-    }
-  };
-
-  private updateCoverage(block: Block, value: boolean) {
+  private updateMatrix(block: Block | TargetBlock, value: boolean) {
     block.elements.forEach(element => {
-      const row = parseInt(element.style.gridRowStart) - 1;
-      const col = parseInt(element.style.gridColumnStart) - 1;
-      this.coverageMatrix[row][col] = value;
+      const row = toZeroBased(element.style.gridRowStart);
+      const column = toZeroBased(element.style.gridColumnStart);
+      this.matrix.setValue(row, column, value);
     });
   }
 
@@ -165,6 +148,8 @@ export class Board {
     this.setBlocks();
     this.setGates();
   }
+
+  private renderEntities(...entities: Entity[]) {}
 
   private setBlocks() {
     this.blocks.forEach(block => {
@@ -276,13 +261,7 @@ export class Board {
     this.element.style.gridTemplate = `repeat(${this.rows}, ${unit}px) / repeat(${this.columns}, ${unit}px)`;
   }
 
-  private setCoverageMatrix() {
-    this.coverageMatrix = Array(this.rows)
-      .fill([])
-      .map(_ => Array(this.columns).fill(false));
-  }
-
-  private getBlock(element: HTMLElement): Block {
+  private getBlock(element: HTMLElement): Block | TargetBlock {
     for (const block of this.blocks) {
       if (block.id === +element.dataset.blockId) return block;
     }
@@ -298,14 +277,14 @@ export class Board {
   }
 
   reset() {
-    this.setCoverageMatrix();
+    this.matrix.reset();
     this.setBlocks();
     this.moveCount = 0;
   }
 
   destroy() {
-    this.element.removeEventListener("mousedown", this.onMouseDown);
-    document.removeEventListener("mousemove", this.onMouseMove);
-    document.removeEventListener("mouseup", this.onMouseUp);
+    this.element.removeEventListener("mousedown", this.dragStart);
+    document.removeEventListener("mousemove", this.dragMove);
+    document.removeEventListener("mouseup", this.dragEnd);
   }
 }

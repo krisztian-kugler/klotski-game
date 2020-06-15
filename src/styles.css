@@ -93,7 +93,6 @@ header {
 .target-zone:after,
 .block:after {
   display: block;
-  content: "";
   width: 50%;
   height: 50%;
   border-radius: 50%;
