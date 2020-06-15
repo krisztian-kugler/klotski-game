@@ -1,5 +1,5 @@
 import { BoardConfig, GridCell } from "./models";
-import { Entity, Block, Wall, Gate, TargetBlock, TargetZone, EntityConfig } from "./entities";
+import { Entity, Block, Wall, Gate, TargetBlock, TargetZone, EntityConfig, EntityType } from "./entities";
 import { BoardMatrix } from "./board-matrix";
 import { validityChecker } from "./validity-checker";
 import { toZeroBased } from "./utils";
@@ -56,7 +56,11 @@ export class Board {
     document.addEventListener("mouseup", this.dragEnd);
   }
 
-  private entityFactory(entity: new (...args: any[]) => Entity, cells: GridCell[], config?: EntityConfig) {
+  private entityFactory(
+    entity: new (...args: any[]) => EntityType,
+    cells: GridCell[],
+    config?: EntityConfig
+  ): EntityType {
     return new entity(cells, config);
   }
 

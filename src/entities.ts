@@ -1,6 +1,6 @@
 import { GridCell } from "./models";
 
-type EntityType = "block" | "wall" | "targetZone" | "targetBlock" | "gate";
+export type EntityType = Block | Wall | TargetBlock | TargetZone | Gate;
 export interface EntityConfig {
   classList?: string[];
   attributes?: { [key: string]: string };
