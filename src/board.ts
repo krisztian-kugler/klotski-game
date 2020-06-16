@@ -56,11 +56,17 @@ export class Board {
     document.addEventListener("mouseup", this.dragEnd);
   }
 
+  private generateId = (() => {
+    let counter = 0;
+    return () => counter++;
+  })();
+
   private entityFactory(
     entity: new (...args: any[]) => EntityType,
     cells: GridCell[],
     config?: EntityConfig
   ): EntityType {
+    const id = this.generateId();
     return new entity(cells, config);
   }
 

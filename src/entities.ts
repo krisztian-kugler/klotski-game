@@ -4,6 +4,8 @@ export type EntityType = Block | Wall | TargetBlock | TargetZone | Gate;
 export interface EntityConfig {
   classList?: string[];
   attributes?: { [key: string]: string };
+  movable?: boolean;
+  border?: boolean;
 }
 
 export abstract class Entity {
@@ -28,8 +30,10 @@ export abstract class Entity {
 }
 
 export class Block extends Entity {
-  constructor(area: GridCell[], public id: number, private isTarget = false) {
-    super(area);
+  static config: EntityConfig;
+
+  constructor(cells: GridCell[], public id: number, private isTarget = false) {
+    super(cells);
     const classList = ["block"];
     if (isTarget) classList.push("target");
     this.createElements(classList);
@@ -56,15 +60,15 @@ export class TargetZone extends Entity {
 }
 
 export class Wall extends Entity {
-  constructor(area: GridCell[]) {
-    super(area);
+  constructor(cells: GridCell[]) {
+    super(cells);
     this.createElements(["wall"]);
   }
 }
 
 export class Gate extends Entity {
-  constructor(area: GridCell[]) {
-    super(area);
+  constructor(cells: GridCell[]) {
+    super(cells);
     this.createElements(["gate"]);
   }
 }
