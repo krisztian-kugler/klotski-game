@@ -22,9 +22,18 @@ export class Board {
   refX: number;
   refY: number;
   entities: { [key: string]: any } = {};
-  private dragging = false;
+  private _dragging = false;
   private activeElement: Element;
   private activeBlock: Block | TargetBlock;
+
+  set dragging(value: boolean) {
+    this._dragging = value;
+    document.body.style.cursor = this.dragging ? "pointer" : "default";
+  }
+
+  get dragging(): boolean {
+    return this._dragging;
+  }
 
   constructor(config: BoardConfig) {
     validityChecker(config);
@@ -72,13 +81,12 @@ export class Board {
 
   private dragStart = (event: MouseEvent) => {
     event.preventDefault();
-    const element = event.target as HTMLDivElement;
+    const element = event.target as HTMLElement;
     if (element.hasAttribute("movable")) {
       this.dragging = true;
       this.activeElement = element;
       this.activeBlock = this.getBlock(element);
       this.updateMatrix(this.activeBlock, false);
-      this.setReferenceValues(event);
     }
   };
 
@@ -86,17 +94,17 @@ export class Board {
     if (!this.dragging) return;
 
     const { clientX, clientY } = event;
-    const { top, bottom, left, right } = this.activeElement.getBoundingClientRect();
-    const elementBelow = document.elementFromPoint(clientX, clientY) as HTMLDivElement;
+    const elementBelow = document.elementFromPoint(clientX, clientY) as HTMLElement;
 
-    if (elementBelow !== this.activeElement && clientX > Math.ceil(left) && clientX < Math.floor(right)) {
-      if (clientY > this.refY) this.moveHandler(event, elementBelow, "gridRowStart", 1);
-      if (clientY < this.refY) this.moveHandler(event, elementBelow, "gridRowStart", -1);
-    }
+    if (!this.activeElement && this.activeBlock.elements.includes(elementBelow)) this.activeElement = elementBelow;
 
-    if (elementBelow !== this.activeElement && clientY > Math.ceil(top) && clientY < Math.floor(bottom)) {
-      if (clientX > this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", 1);
-      if (clientX < this.refX) this.moveHandler(event, elementBelow, "gridColumnStart", -1);
+    if (this.activeElement && this.activeElement !== elementBelow) {
+      const { top, bottom, left, right } = this.activeElement.getBoundingClientRect();
+
+      if (clientY < top) this.moveHandler(elementBelow, "gridRowStart", -1);
+      if (clientY > bottom) this.moveHandler(elementBelow, "gridRowStart", 1);
+      if (clientX < left) this.moveHandler(elementBelow, "gridColumnStart", -1);
+      if (clientX > right) this.moveHandler(elementBelow, "gridColumnStart", 1);
     }
   };
 
@@ -104,7 +112,7 @@ export class Board {
     if (!this.dragging) return;
     this.dragging = false;
     this.updateMatrix(this.activeBlock, true);
-    this.activeBlock = this.activeElement = this.refX = this.refY = null;
+    this.activeBlock = this.activeElement = null;
   };
 
   private canMove(block: Block | TargetBlock, axis: GridAxis, direction: 1 | -1): boolean {
@@ -127,21 +135,14 @@ export class Board {
     block.elements.forEach(element => (element.style[axis] = (parseInt(element.style[axis]) + direction).toString()));
   }
 
-  private moveHandler(event: MouseEvent, elementBelow: HTMLDivElement, axis: GridAxis, direction: -1 | 1) {
+  private moveHandler(elementBelow: HTMLElement, axis: GridAxis, direction: -1 | 1) {
     if (this.canMove(this.activeBlock, axis, direction)) {
       this.moveBlock(this.activeBlock, axis, direction);
-      this.setReferenceValues(event);
     } else if (this.activeBlock.elements.includes(elementBelow)) {
       this.activeElement = elementBelow;
-      this.setReferenceValues(event);
     } else {
-      this.dragEnd();
+      this.activeElement = null;
     }
-  }
-
-  private setReferenceValues(event: MouseEvent) {
-    this.refX = event.clientX;
-    this.refY = event.clientY;
   }
 
   private updateMatrix(block: Block | TargetBlock, value: boolean) {

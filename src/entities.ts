@@ -9,7 +9,7 @@ export interface EntityConfig {
 }
 
 export abstract class Entity {
-  elements: HTMLDivElement[] = [];
+  elements: HTMLElement[] = [];
 
   constructor(public cells: GridCell[], private config?: EntityConfig) {
     // this.createElements(config.classList)
