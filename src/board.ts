@@ -1,7 +1,7 @@
 import { BoardConfig, GridCell } from "./models";
-import { Entity, Block, Wall, Gate, Target, EntityConfig, EntityType } from "./entities";
+import { Entity, Block, Wall, Gate, Target, EntityType } from "./entities";
 import { BoardMatrix } from "./board-matrix";
-import { validityChecker } from "./validity-checker";
+import { validateBoard } from "./validity-checker";
 import { toZeroBased } from "./utils";
 
 const unit = 80;
@@ -14,17 +14,15 @@ export class Board {
   moveCount: number = 0;
   rows: number;
   columns: number;
-  targetBlock: Block;
   targetZone: Target;
   blocks: Block[] = [];
   walls: Wall[] = [];
   gates: Gate[] = [];
-  refX: number;
-  refY: number;
   entities: { [key: string]: any } = {};
-  private _dragging = false;
-  private activeElement: Element;
+
   private activeBlock: Block;
+  private activeElement: Element;
+  private _dragging = false;
 
   set dragging(value: boolean) {
     this._dragging = value;
@@ -36,28 +34,23 @@ export class Board {
   }
 
   constructor(config: BoardConfig) {
-    validityChecker(config);
+    validateBoard(config);
     this.rows = config.rows;
     this.columns = config.columns;
-    this.matrix = new BoardMatrix(this.rows, this.columns);
-    this.targetBlock = new Block(config.targetBlock, 0, true);
-    this.targetZone = new Target(config.targetZone);
 
-    // TODO: Move matrix initialization to entity creation / board setup phase!
-    if (config.blocks) {
-      this.blocks = config.blocks
-        .map((cellGroup, index) => new Block(cellGroup, index + 1, false))
-        .concat(this.targetBlock);
-    }
-
-    if (config.walls) this.walls = config.walls.map(cellGroup => this.entityFactory(Wall, cellGroup));
-    if (config.gates) this.gates = config.gates.map(cellGroup => this.entityFactory(Gate, cellGroup));
+    this.targetZone = this.createEntity(Target, config.targetZone);
+    this.blocks.push(this.createEntity(Block, config.targetBlock, true));
+    if (config.blocks) this.blocks.push(...config.blocks.map(cells => this.createEntity(Block, cells)));
+    if (config.walls) this.walls = config.walls.map(cells => this.createEntity(Wall, cells));
+    if (config.gates) this.gates = config.gates.map(cells => this.createEntity(Gate, cells));
 
     this.init();
 
-    [...this.blocks, ...this.gates, ...this.walls, this.targetBlock].forEach(entity => {
+    this.matrix = new BoardMatrix(this.rows, this.columns);
+    [...this.blocks, ...this.gates, ...this.walls].forEach(entity => {
       entity.cells.forEach(cell => this.matrix.setValue(cell.row - 1, cell.column - 1, true));
     });
+    // TODO: Move matrix initialization to entity creation / board setup phase!
     // upgrade updateMatrix so it can handle an array of entity inputs
 
     this.element.addEventListener("mousedown", this.dragStart);
@@ -70,13 +63,8 @@ export class Board {
     return () => counter++;
   })();
 
-  private entityFactory(
-    entity: new (...args: any[]) => EntityType,
-    cells: GridCell[],
-    config?: EntityConfig
-  ): EntityType {
-    const id = this.generateId();
-    return new entity(cells, config);
+  private createEntity(entity: new (...args: any[]) => EntityType, cells: GridCell[], ...args: any[]): any {
+    return new entity(cells, this.generateId(), ...args);
   }
 
   private dragStart = (event: MouseEvent) => {
@@ -117,10 +105,13 @@ export class Board {
 
   private canMove(block: Block, axis: GridAxis, direction: 1 | -1): boolean {
     return block.elements
-      .map(element => ({
-        row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
-        column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
-      }))
+      .map(
+        element =>
+          ({
+            row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
+            column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
+          } as GridCell)
+      )
       .every(
         cell =>
           cell.row >= 0 &&
@@ -274,7 +265,7 @@ export class Board {
 
   private getBlock(element: HTMLElement): Block {
     for (const block of this.blocks) {
-      if (block.id === +element.dataset.blockId) return block;
+      if (block.elements.includes(element)) return block;
     }
   }
 

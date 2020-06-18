@@ -2,7 +2,7 @@ import { BoardConfig, GridCell } from "./models";
 
 const errorStart = "Board validation failed:";
 
-export const validityChecker = (config: BoardConfig) => {
+export const validateBoard = (config: BoardConfig) => {
   if (config.rows === undefined) {
     throw new Error(errorStart + " 'rows' is missing.");
   }
