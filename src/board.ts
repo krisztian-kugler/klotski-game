@@ -1,5 +1,5 @@
 import { BoardConfig, GridCell } from "./models";
-import { Entity, Block, Wall, Gate, TargetBlock, TargetZone, EntityConfig, EntityType } from "./entities";
+import { Entity, Block, Wall, Gate, Target, EntityConfig, EntityType } from "./entities";
 import { BoardMatrix } from "./board-matrix";
 import { validityChecker } from "./validity-checker";
 import { toZeroBased } from "./utils";
@@ -14,8 +14,8 @@ export class Board {
   moveCount: number = 0;
   rows: number;
   columns: number;
-  targetBlock: TargetBlock;
-  targetZone: TargetZone;
+  targetBlock: Block;
+  targetZone: Target;
   blocks: Block[] = [];
   walls: Wall[] = [];
   gates: Gate[] = [];
@@ -24,7 +24,7 @@ export class Board {
   entities: { [key: string]: any } = {};
   private _dragging = false;
   private activeElement: Element;
-  private activeBlock: Block | TargetBlock;
+  private activeBlock: Block;
 
   set dragging(value: boolean) {
     this._dragging = value;
@@ -40,8 +40,8 @@ export class Board {
     this.rows = config.rows;
     this.columns = config.columns;
     this.matrix = new BoardMatrix(this.rows, this.columns);
-    this.targetBlock = new TargetBlock(config.targetBlock, 0, true);
-    this.targetZone = new TargetZone(config.targetZone);
+    this.targetBlock = new Block(config.targetBlock, 0, true);
+    this.targetZone = new Target(config.targetZone);
 
     // TODO: Move matrix initialization to entity creation / board setup phase!
     if (config.blocks) {
@@ -115,7 +115,7 @@ export class Board {
     this.activeBlock = this.activeElement = null;
   };
 
-  private canMove(block: Block | TargetBlock, axis: GridAxis, direction: 1 | -1): boolean {
+  private canMove(block: Block, axis: GridAxis, direction: 1 | -1): boolean {
     return block.elements
       .map(element => ({
         row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
@@ -131,7 +131,7 @@ export class Board {
       );
   }
 
-  private moveBlock(block: Block | TargetBlock, axis: GridAxis, direction: -1 | 1) {
+  private moveBlock(block: Block, axis: GridAxis, direction: -1 | 1) {
     block.elements.forEach(element => (element.style[axis] = (parseInt(element.style[axis]) + direction).toString()));
   }
 
@@ -145,7 +145,7 @@ export class Board {
     }
   }
 
-  private updateMatrix(block: Block | TargetBlock, value: boolean) {
+  private updateMatrix(block: Block, value: boolean) {
     block.elements.forEach(element => {
       const row = toZeroBased(element.style.gridRowStart);
       const column = toZeroBased(element.style.gridColumnStart);
@@ -272,7 +272,7 @@ export class Board {
     this.element.style.gridTemplate = `repeat(${this.rows}, ${unit}px) / repeat(${this.columns}, ${unit}px)`;
   }
 
-  private getBlock(element: HTMLElement): Block | TargetBlock {
+  private getBlock(element: HTMLElement): Block {
     for (const block of this.blocks) {
       if (block.id === +element.dataset.blockId) return block;
     }

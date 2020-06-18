@@ -1,6 +1,6 @@
 import { GridCell } from "./models";
 
-export type EntityType = Block | Wall | TargetBlock | TargetZone | Gate;
+export type EntityType = Block | Target | Wall | Gate;
 export interface EntityConfig {
   classList?: string[];
   attributes?: { [key: string]: string };
@@ -45,14 +45,7 @@ export class Block extends Entity {
   }
 }
 
-export class TargetBlock extends Block {
-  constructor(cells: GridCell[], id: number, isTarget = false) {
-    super(cells, id, isTarget);
-    this.elements.forEach(element => element.setAttribute("entity", "target-block"));
-  }
-}
-
-export class TargetZone extends Entity {
+export class Target extends Entity {
   constructor(public cells: GridCell[]) {
     super(cells);
     this.createElements(["target-zone"]);
