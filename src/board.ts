@@ -47,11 +47,8 @@ export class Board {
     this.init();
 
     this.matrix = new BoardMatrix(this.rows, this.columns);
-    [...this.blocks, ...this.gates, ...this.walls].forEach(entity => {
-      entity.cells.forEach(cell => this.matrix.setValue(cell.row - 1, cell.column - 1, true));
-    });
+    this.updateMatrix([...this.blocks, ...this.walls, ...this.gates], true);
     // TODO: Move matrix initialization to entity creation / board setup phase!
-    // upgrade updateMatrix so it can handle an array of entity inputs
 
     this.element.addEventListener("mousedown", this.dragStart);
     document.addEventListener("mousemove", this.dragMove);
@@ -74,7 +71,7 @@ export class Board {
       this.dragging = true;
       this.activeElement = element;
       this.activeBlock = this.getBlock(element);
-      this.updateMatrix(this.activeBlock, false);
+      this.updateMatrix([this.activeBlock], false);
     }
   };
 
@@ -99,7 +96,7 @@ export class Board {
   private dragEnd = () => {
     if (!this.dragging) return;
     this.dragging = false;
-    this.updateMatrix(this.activeBlock, true);
+    this.updateMatrix([this.activeBlock], true);
     this.activeBlock = this.activeElement = null;
   };
 
@@ -136,12 +133,14 @@ export class Board {
     }
   }
 
-  private updateMatrix(block: Block, value: boolean) {
-    block.elements.forEach(element => {
-      const row = toZeroBased(element.style.gridRowStart);
-      const column = toZeroBased(element.style.gridColumnStart);
-      this.matrix.setValue(row, column, value);
-    });
+  private updateMatrix(entities: Entity[], value: boolean) {
+    for (const entity of entities) {
+      for (const element of entity.elements) {
+        const row = toZeroBased(element.style.gridRowStart);
+        const column = toZeroBased(element.style.gridColumnStart);
+        this.matrix.setValue(row, column, value);
+      }
+    }
   }
 
   private init() {
