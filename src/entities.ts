@@ -14,19 +14,40 @@ export abstract class Entity {
 
   constructor(public cells: GridCell[], public id: number) {}
 
-  createElements(classList: string[]) {
-    this.cells.forEach(cell => {
+  protected createElements(classList: string[]) {
+    for (const cell of this.cells) {
       const element = document.createElement("div");
       element.classList.add(...classList);
       element.style.gridRowStart = cell.row.toString();
       element.style.gridColumnStart = cell.column.toString();
-      /* if (this.config?.attributes) {
-        Object.entries(this.config.attributes).forEach(([key, value]) => element.setAttribute(key, value));
-      } */
+      element.setAttribute("entity-id", this.id.toString());
       this.elements.push(element);
-    });
+    }
   }
 }
+
+// Mixins
+const BorderMixin = (superclass: new (...args: any[]) => any) =>
+  class extends superclass {
+    constructor(...args: any[]) {
+      super(...args);
+    }
+
+    protected addBorder() {}
+  };
+
+const UnlockMixin = (superclass: new (...args: any[]) => any) =>
+  class extends superclass {
+    constructor(...args: any[]) {
+      super(...args);
+    }
+
+    protected unlock() {
+      this.elements.forEach((element: HTMLElement) => {
+        element.classList.add("unlocked");
+      });
+    }
+  };
 
 export class Block extends Entity {
   constructor(cells: GridCell[], id: number, public isTarget = false) {
@@ -35,9 +56,7 @@ export class Block extends Entity {
     if (isTarget) classList.push("target-block");
     this.createElements(classList);
     this.elements.forEach(element => {
-      // element.setAttribute("data-block-id", id.toString());
-      // element.setAttribute("entity", "block");
-      element.setAttribute("movable", "");
+      element.setAttribute("draggable", "");
     });
   }
 }

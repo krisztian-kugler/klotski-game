@@ -67,7 +67,7 @@ export class Board {
   private dragStart = (event: MouseEvent) => {
     event.preventDefault();
     const element = event.target as HTMLElement;
-    if (element.hasAttribute("movable")) {
+    if (element.hasAttribute("draggable")) {
       this.dragging = true;
       this.activeElement = element;
       this.activeBlock = this.getBlock(element);
@@ -153,36 +153,22 @@ export class Board {
   private renderEntities(...entities: Entity[]) {}
 
   private setBlocks() {
-    this.blocks.forEach(block => {
-      block.elements.forEach(element => {
+    for (const block of this.blocks) {
+      for (const element of block.elements) {
         element.classList.add("border-top", "border-bottom", "border-left", "border-right");
-        const col = +element.style.gridColumnStart;
         const row = +element.style.gridRowStart;
-        const left = +element.style.gridColumnStart - 1;
-        const right = +element.style.gridColumnStart + 1;
-        const top = +element.style.gridRowStart - 1;
-        const bottom = +element.style.gridRowStart + 1;
+        const column = +element.style.gridColumnStart;
 
-        block.cells.forEach(position => {
-          if (position.column === col && position.row === top) {
-            element.classList.remove("border-top");
-          }
+        for (const cell of block.cells) {
+          if (cell.column === column && cell.row === row - 1) element.classList.remove("border-top");
+          if (cell.column === column && cell.row === row + 1) element.classList.remove("border-bottom");
+          if (cell.row === row && cell.column === column - 1) element.classList.remove("border-left");
+          if (cell.row === row && cell.column === column + 1) element.classList.remove("border-right");
+        }
 
-          if (position.column === col && position.row === bottom) {
-            element.classList.remove("border-bottom");
-          }
-
-          if (position.column === left && position.row === row) {
-            element.classList.remove("border-left");
-          }
-
-          if (position.column === right && position.row === row) {
-            element.classList.remove("border-right");
-          }
-        });
         this.element.append(element);
-      });
-    });
+      }
+    }
   }
 
   private addBorders(items: Entity[]) {}
