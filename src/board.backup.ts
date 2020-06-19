@@ -1,52 +1,113 @@
-/*
-private dragMove = (event: MouseEvent) => {
-    if (!this.dragging) return;
+/* import { GridCell } from "./models";
 
-    const { clientX, clientY } = event;
-    const elementBelow = document.elementFromPoint(clientX, clientY) as HTMLDivElement;
+export type EntityType = Block | Wall | Target | Gate;
+export interface EntityConfig {
+  classList?: string[];
+  attributes?: { [key: string]: string };
+  movable?: boolean;
+  border?: boolean;
+  takesUpSpace?: boolean;
+  isTarget?: boolean;
+}
 
-    if (!this.activeElement && this.activeBlock.elements.includes(elementBelow)) this.activeElement = elementBelow;
+interface EntityShape {
+  classList: string[];
+  movable: boolean;
+  takesUpSpace: boolean;
+}
 
-    if (this.activeElement && this.activeElement !== elementBelow) {
-      const { top, bottom, left, right } = this.activeElement.getBoundingClientRect();
-      if (clientY < top) this.moveHandler("gridRowStart", -1);
-      if (clientY > bottom) this.moveHandler("gridRowStart", 1);
-      if (clientX < left) this.moveHandler("gridColumnStart", -1);
-      if (clientX > right) this.moveHandler("gridColumnStart", 1);
+export class Entity {
+  elements: HTMLDivElement[] = [];
+
+  constructor(public cells: GridCell[], public id: number) {}
+
+  protected createElements(classList: string[]) {
+    this.cells.forEach(cell => {
+      const element = document.createElement("div");
+      element.classList.add(...classList);
+      element.style.gridRowStart = cell.row.toString();
+      element.style.gridColumnStart = cell.column.toString();
+      element.setAttribute("entity-id", this.id.toString());
+      this.elements.push(element);
+
+      // Put border creation logic here!!
+    });
+  }
+}
+
+// Mixins
+const BorderMixin = (superclass: new (...args: any[]) => any) =>
+  class extends superclass {
+    constructor(...args: any[]) {
+      super(...args);
+    }
+
+    createBorders() {
+      console.log("borders created!");
     }
   };
 
-  private dragEnd = () => {
-    if (!this.dragging) return;
-    this.dragging = false;
-    document.body.style.cursor = "default";
-    this.updateMatrix(this.activeBlock, true);
-    this.activeBlock = this.activeElement = this.refX = this.refY = null;
+const UnlockMixin = (superclass: new (...args: any[]) => any) =>
+  class Unlock extends superclass {
+    constructor(...args: any[]) {
+      super(...args);
+    }
+
+    unlock() {
+      console.log("unlocked!");
+      this.elements.forEach((element: HTMLElement) => {
+        element.classList.add("unlocked");
+      });
+    }
   };
 
-  private canMove(block: Block | TargetBlock, axis: GridAxis, direction: 1 | -1): boolean {
-    return block.elements
-      .map(element => ({
-        row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
-        column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
-      }))
-      .every(
-        cell =>
-          cell.row >= 0 &&
-          cell.row <= this.rows - 1 &&
-          cell.column >= 0 &&
-          cell.column <= this.columns - 1 &&
-          !this.matrix.getValue(cell.row, cell.column)
-      );
+export class Block extends BorderMixin(Entity) implements EntityShape {
+  readonly classList = [Block.name.toLowerCase()];
+  readonly takesUpSpace = true;
+  readonly movable = true;
+
+  constructor(cells: GridCell[], id: number, isTarget: boolean) {
+    super(cells, id);
+    if (isTarget) this.classList.push("target-block");
+    this.createElements(this.classList);
+    this.createBorders();
+  }
+}
+
+export class Target extends Entity implements EntityShape {
+  readonly classList = [Target.name.toLowerCase()];
+  readonly takesUpSpace = false;
+  readonly movable = false;
+
+  constructor(cells: GridCell[], id: number) {
+    super(cells, id);
+    this.createElements(this.classList);
+  }
+}
+
+export class Wall extends BorderMixin(Entity) implements EntityShape {
+  readonly classList = [Wall.name.toLowerCase()];
+  readonly takesUpSpace = true;
+  readonly movable = false;
+
+  constructor(cells: GridCell[], id: number) {
+    super(cells, id);
+    this.createElements(this.classList);
+  }
+}
+
+export class Gate extends BorderMixin(UnlockMixin(Entity)) implements EntityShape {
+  readonly classList = [Gate.name.toLowerCase()];
+  readonly takesUpSpace = true;
+  readonly movable = false;
+
+  unlocked = false;
+
+  constructor(cells: GridCell[], id: number) {
+    super(cells, id);
+    this.createElements(this.classList);
   }
 
-  private moveBlock(block: Block | TargetBlock, axis: GridAxis, direction: -1 | 1) {
-    block.elements.forEach(element => (element.style[axis] = (parseInt(element.style[axis]) + direction).toString()));
-  }
-
-  private moveHandler(axis: GridAxis, direction: -1 | 1) {
-    this.canMove(this.activeBlock, axis, direction)
-      ? this.moveBlock(this.activeBlock, axis, direction)
-      : (this.activeElement = null);
-  }
-*/
+  open(row: number, column: number) {}
+}
+ */
