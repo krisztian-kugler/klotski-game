@@ -122,7 +122,7 @@ export class Board {
   private moveHandler(elementBelow: HTMLElement, axis: GridAxis, direction: -1 | 1) {
     if (this.canMove(this.activeBlock, axis, direction)) {
       this.moveBlock(this.activeBlock, axis, direction);
-      this.checkWinCondition();
+      console.log(this.checkWinCondition());
     } else if (this.activeBlock.elements.includes(elementBelow)) {
       this.activeElement = elementBelow;
     } else {
@@ -130,9 +130,14 @@ export class Board {
     }
   }
 
-  private checkWinCondition() {
+  private checkWinCondition(): boolean {
     if (this.activeBlock.master) {
-    }
+      return this.target.cells.every(cell =>
+        this.activeBlock.elements.some(
+          element => cell.row === +element.style.gridRowStart && cell.column === +element.style.gridColumnStart
+        )
+      );
+    } else return false;
   }
 
   private updateMatrix(entities: Entity[], value: boolean) {
