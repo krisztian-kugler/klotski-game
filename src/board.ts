@@ -15,10 +15,10 @@ export class Board {
   rows: number;
   columns: number;
   target: Target;
+  masterBlock: Block;
   blocks: Block[] = [];
   walls: Wall[] = [];
   gates: Gate[] = [];
-  entities: Entity[] = [];
 
   private activeBlock: Block;
   private activeElement: Element;
@@ -39,15 +39,15 @@ export class Board {
     this.columns = config.columns;
 
     this.target = this.createEntity(Target, config.target);
-    this.blocks.push(this.createEntity(Block, config.masterBlock, true));
-    if (config.blocks) this.blocks.push(...config.blocks.map(cells => this.createEntity(Block, cells)));
+    this.masterBlock = this.createEntity(Block, config.masterBlock, true);
+    if (config.blocks) this.blocks = config.blocks.map(cells => this.createEntity(Block, cells));
     if (config.walls) this.walls = config.walls.map(cells => this.createEntity(Wall, cells));
     if (config.gates) this.gates = config.gates.map(cells => this.createEntity(Gate, cells));
 
     this.init();
 
     this.matrix = new BoardMatrix(this.rows, this.columns);
-    this.updateMatrix([...this.blocks, ...this.walls, ...this.gates], true);
+    this.updateMatrix([this.masterBlock, ...this.blocks, ...this.walls, ...this.gates], true);
 
     this.element.addEventListener("mousedown", this.dragStart);
     document.addEventListener("mousemove", this.dragMove);
@@ -69,8 +69,18 @@ export class Board {
     if (element.hasAttribute("draggable")) {
       this.dragging = true;
       this.activeElement = element;
-      this.activeBlock = this.getBlock(element);
+      this.activeBlock = [this.masterBlock, ...this.blocks].find(
+        block => block.id === +element.getAttribute("entity-id")
+      );
       this.updateMatrix([this.activeBlock], false);
+    }
+
+    if (element.classList.contains("gate")) {
+      const gate = this.gates.find(gate => gate.id === +element.getAttribute("entity-id"));
+      if (gate.unlocked) {
+        gate.open();
+        this.updateMatrix([gate], false);
+      }
     }
   };
 
@@ -122,11 +132,34 @@ export class Board {
   private moveHandler(elementBelow: HTMLElement, axis: GridAxis, direction: -1 | 1) {
     if (this.canMove(this.activeBlock, axis, direction)) {
       this.moveBlock(this.activeBlock, axis, direction);
-      console.log(this.checkWinCondition());
+      if (this.activeBlock === this.masterBlock) {
+        console.log(this.checkWinCondition());
+        this.gateUnlocker();
+      }
     } else if (this.activeBlock.elements.includes(elementBelow)) {
       this.activeElement = elementBelow;
     } else {
       this.activeElement = null;
+    }
+  }
+
+  private gateUnlocker() {
+    for (const element of this.masterBlock.elements) {
+      const row = +element.style.gridRowStart;
+      const column = +element.style.gridColumnStart;
+
+      for (const gate of this.gates) {
+        for (const cell of gate.cells) {
+          if (
+            (cell.row === row && cell.column === column - 1) ||
+            (cell.row === row && cell.column === column + 1) ||
+            (cell.column === column && cell.row === row - 1) ||
+            (cell.column === column && cell.row === row + 1)
+          ) {
+            gate.unlockElement(cell);
+          }
+        }
+      }
     }
   }
 
@@ -153,7 +186,7 @@ export class Board {
   private init() {
     this.createBoard();
 
-    for (const entity of [this.target, ...this.blocks, ...this.walls, ...this.gates]) {
+    for (const entity of [this.target, this.masterBlock, ...this.blocks, ...this.walls, ...this.gates]) {
       for (const element of entity.elements) {
         this.element.append(element);
       }
@@ -164,12 +197,6 @@ export class Board {
     this.element = document.createElement("div");
     this.element.classList.add("board");
     this.element.style.gridTemplate = `repeat(${this.rows}, ${unit}px) / repeat(${this.columns}, ${unit}px)`;
-  }
-
-  private getBlock(element: HTMLElement): Block {
-    for (const block of this.blocks) {
-      if (block.elements.includes(element)) return block;
-    }
   }
 
   mount(selector: string) {

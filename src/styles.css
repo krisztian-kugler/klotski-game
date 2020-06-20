@@ -69,6 +69,9 @@ header {
 }
 
 .gate {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: #0dcbda;
 }
 
@@ -105,4 +108,35 @@ header {
   border-top: 1px solid rgba(0, 0, 0, 0.75);
   background-image: linear-gradient(rgb(0, 0, 0, 0.1), transparent);
   transform: rotate(-45deg);
+}
+
+.unlocked:after {
+  display: block;
+  content: "";
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+  border-top: 1px solid rgba(0, 0, 0, 0.75);
+  background-image: linear-gradient(rgb(0, 0, 0, 0.2), transparent);
+  transform: rotate(-45deg);
+}
+
+.openable {
+  cursor: pointer;
+  animation-name: pulse;
+  animation-iteration-count: infinite;
+  animation-duration: 500ms;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.25;
+  }
 }

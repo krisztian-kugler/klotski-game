@@ -3,18 +3,13 @@ import { Board } from "./board";
 const board = new Board({
   columns: 10,
   rows: 11,
-  /* gates: [
+  gates: [
     [
       { row: 9, column: 5 },
       { column: 6, row: 9 },
     ],
-  ], */
+  ],
   blocks: [
-    [
-      { column: 1, row: 1 },
-      { column: 1, row: 2 },
-      { column: 2, row: 2 },
-    ],
     [
       { column: 4, row: 4 },
       { column: 4, row: 5 },

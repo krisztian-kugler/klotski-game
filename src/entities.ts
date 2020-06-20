@@ -90,9 +90,32 @@ export class Wall extends BorderMixin(Entity) {
   }
 }
 
-export class Gate extends UnlockMixin(Entity) {
+export class Gate extends Entity {
+  unlocked = false;
+
   constructor(cells: GridCell[], id: number) {
     super(cells, id);
     this.createElements(["gate"]);
+  }
+
+  unlockElement(cell: GridCell) {
+    for (const element of this.elements) {
+      if (+element.style.gridRowStart === cell.row && +element.style.gridColumnStart === cell.column) {
+        element.classList.add("unlocked");
+      }
+    }
+
+    if (this.elements.every(element => element.classList.contains("unlocked"))) {
+      this.unlocked = true;
+      for (const element of this.elements) {
+        element.classList.add("openable");
+      }
+    }
+  }
+
+  open() {
+    for (const element of this.elements) {
+      element.remove();
+    }
   }
 }
