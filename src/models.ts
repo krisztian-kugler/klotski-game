@@ -6,8 +6,8 @@ export interface GridCell {
 export interface BoardConfig {
   rows: number;
   columns: number;
-  targetBlock: GridCell[];
-  targetZone: GridCell[];
+  target: GridCell[];
+  masterBlock: GridCell[];
   blocks?: GridCell[][];
   walls?: GridCell[][];
   gates?: GridCell[][];

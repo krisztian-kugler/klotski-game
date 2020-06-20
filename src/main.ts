@@ -3,12 +3,12 @@ import { Board } from "./board";
 const board = new Board({
   columns: 10,
   rows: 11,
-  gates: [
+  /* gates: [
     [
       { row: 9, column: 5 },
       { column: 6, row: 9 },
     ],
-  ],
+  ], */
   blocks: [
     [
       { column: 1, row: 1 },
@@ -40,17 +40,17 @@ const board = new Board({
     [{ column: 4, row: 8 }],
     [{ column: 7, row: 8 }],
   ],
-  targetBlock: [
+  masterBlock: [
     { column: 5, row: 4 },
     { column: 6, row: 4 },
     { column: 5, row: 5 },
     { column: 6, row: 5 },
   ],
-  targetZone: [
+  target: [
     { column: 9, row: 10 },
     { column: 10, row: 10 },
     { column: 9, row: 11 },
-    { column: 9, row: 11 },
+    { column: 10, row: 11 },
   ],
   walls: [
     [

@@ -1,5 +1,5 @@
 import { BoardConfig, GridCell } from "./models";
-import { Entity, Block, Wall, Gate, Target, EntityType } from "./entities";
+import { Entity, Block, Wall, Gate, Target } from "./entities";
 import { BoardMatrix } from "./board-matrix";
 import { validateBoard } from "./validity-checker";
 import { toZeroBased } from "./utils";
@@ -11,14 +11,14 @@ type GridAxis = "gridRowStart" | "gridColumnStart";
 export class Board {
   element: HTMLDivElement;
   matrix: BoardMatrix;
-  moveCount: number = 0;
+  moveCount = 0;
   rows: number;
   columns: number;
-  targetZone: Target;
+  target: Target;
   blocks: Block[] = [];
   walls: Wall[] = [];
   gates: Gate[] = [];
-  entities: { [key: string]: any } = {};
+  entities: Entity[] = [];
 
   private activeBlock: Block;
   private activeElement: Element;
@@ -38,8 +38,8 @@ export class Board {
     this.rows = config.rows;
     this.columns = config.columns;
 
-    this.targetZone = this.createEntity(Target, config.targetZone);
-    this.blocks.push(this.createEntity(Block, config.targetBlock, true));
+    this.target = this.createEntity(Target, config.target);
+    this.blocks.push(this.createEntity(Block, config.masterBlock, true));
     if (config.blocks) this.blocks.push(...config.blocks.map(cells => this.createEntity(Block, cells)));
     if (config.walls) this.walls = config.walls.map(cells => this.createEntity(Wall, cells));
     if (config.gates) this.gates = config.gates.map(cells => this.createEntity(Gate, cells));
@@ -48,7 +48,6 @@ export class Board {
 
     this.matrix = new BoardMatrix(this.rows, this.columns);
     this.updateMatrix([...this.blocks, ...this.walls, ...this.gates], true);
-    // TODO: Move matrix initialization to entity creation / board setup phase!
 
     this.element.addEventListener("mousedown", this.dragStart);
     document.addEventListener("mousemove", this.dragMove);
@@ -60,7 +59,7 @@ export class Board {
     return () => counter++;
   })();
 
-  private createEntity(entity: new (...args: any[]) => EntityType, cells: GridCell[], ...args: any[]): any {
+  private createEntity(entity: new (...args: any[]) => Entity, cells: GridCell[], ...args: any[]): any {
     return new entity(cells, this.generateId(), ...args);
   }
 
@@ -102,13 +101,10 @@ export class Board {
 
   private canMove(block: Block, axis: GridAxis, direction: 1 | -1): boolean {
     return block.elements
-      .map(
-        element =>
-          ({
-            row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
-            column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
-          } as GridCell)
-      )
+      .map(element => ({
+        row: toZeroBased(element.style.gridRowStart) + (axis === "gridRowStart" ? direction : 0),
+        column: toZeroBased(element.style.gridColumnStart) + (axis === "gridColumnStart" ? direction : 0),
+      }))
       .every(
         cell =>
           cell.row >= 0 &&
@@ -126,10 +122,16 @@ export class Board {
   private moveHandler(elementBelow: HTMLElement, axis: GridAxis, direction: -1 | 1) {
     if (this.canMove(this.activeBlock, axis, direction)) {
       this.moveBlock(this.activeBlock, axis, direction);
+      this.checkWinCondition();
     } else if (this.activeBlock.elements.includes(elementBelow)) {
       this.activeElement = elementBelow;
     } else {
       this.activeElement = null;
+    }
+  }
+
+  private checkWinCondition() {
+    if (this.activeBlock.master) {
     }
   }
 
@@ -144,105 +146,16 @@ export class Board {
   }
 
   private init() {
-    this.setBoard();
-    this.setWalls();
-    this.setBlocks();
-    this.setGates();
-  }
+    this.createBoard();
 
-  private renderEntities(...entities: Entity[]) {}
-
-  private setBlocks() {
-    for (const block of this.blocks) {
-      for (const element of block.elements) {
-        element.classList.add("border-top", "border-bottom", "border-left", "border-right");
-        const row = +element.style.gridRowStart;
-        const column = +element.style.gridColumnStart;
-
-        for (const cell of block.cells) {
-          if (cell.column === column && cell.row === row - 1) element.classList.remove("border-top");
-          if (cell.column === column && cell.row === row + 1) element.classList.remove("border-bottom");
-          if (cell.row === row && cell.column === column - 1) element.classList.remove("border-left");
-          if (cell.row === row && cell.column === column + 1) element.classList.remove("border-right");
-        }
-
+    for (const entity of [this.target, ...this.blocks, ...this.walls, ...this.gates]) {
+      for (const element of entity.elements) {
         this.element.append(element);
       }
     }
   }
 
-  private addBorders(items: Entity[]) {}
-
-  private setWalls() {
-    this.addBorders(this.walls);
-    this.walls.forEach(wall => {
-      wall.elements.forEach(element => {
-        element.classList.add("border-top", "border-bottom", "border-left", "border-right");
-        const col = +element.style.gridColumnStart;
-        const row = +element.style.gridRowStart;
-        const left = +element.style.gridColumnStart - 1;
-        const right = +element.style.gridColumnStart + 1;
-        const top = +element.style.gridRowStart - 1;
-        const bottom = +element.style.gridRowStart + 1;
-
-        wall.cells.forEach(position => {
-          if (position.column === col && position.row === top) {
-            element.classList.remove("border-top");
-          }
-
-          if (position.column === col && position.row === bottom) {
-            element.classList.remove("border-bottom");
-          }
-
-          if (position.column === left && position.row === row) {
-            element.classList.remove("border-left");
-          }
-
-          if (position.column === right && position.row === row) {
-            element.classList.remove("border-right");
-          }
-        });
-
-        this.element.append(element);
-      });
-    });
-  }
-
-  private setGates() {
-    this.gates.forEach(gate => {
-      gate.elements.forEach(element => {
-        element.classList.add("border-top", "border-bottom", "border-left", "border-right");
-        const col = +element.style.gridColumnStart;
-        const row = +element.style.gridRowStart;
-        const left = +element.style.gridColumnStart - 1;
-        const right = +element.style.gridColumnStart + 1;
-        const top = +element.style.gridRowStart - 1;
-        const bottom = +element.style.gridRowStart + 1;
-
-        gate.cells.forEach(position => {
-          if (position.column === col && position.row === top) {
-            element.classList.remove("border-top");
-          }
-
-          if (position.column === col && position.row === bottom) {
-            element.classList.remove("border-bottom");
-          }
-
-          if (position.column === left && position.row === row) {
-            element.classList.remove("border-left");
-          }
-
-          if (position.column === right && position.row === row) {
-            element.classList.remove("border-right");
-          }
-        });
-
-        this.element.append(element);
-      });
-    });
-  }
-
-  private setBoard() {
+  private createBoard() {
     this.element = document.createElement("div");
     this.element.classList.add("board");
     this.element.style.gridTemplate = `repeat(${this.rows}, ${unit}px) / repeat(${this.columns}, ${unit}px)`;
@@ -265,7 +178,6 @@ export class Board {
 
   reset() {
     this.matrix.reset();
-    this.setBlocks();
     this.moveCount = 0;
   }
 

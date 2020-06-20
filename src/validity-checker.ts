@@ -11,11 +11,11 @@ export const validateBoard = (config: BoardConfig) => {
     throw new Error(errorStart + " 'columns' is missing.");
   }
 
-  if (config.targetBlock === undefined) {
+  if (config.masterBlock === undefined) {
     throw new Error(errorStart + " 'targetBlock' is missing.");
   }
 
-  if (config.targetZone === undefined) {
+  if (config.target === undefined) {
     throw new Error(errorStart + " 'targetZone' is missing.");
   }
 
@@ -27,11 +27,11 @@ export const validateBoard = (config: BoardConfig) => {
     throw new Error(errorStart + " 'columns' must be a positive integer greater than 1.");
   }
 
-  if (!Array.isArray(config.targetBlock) || !config.targetBlock.length) {
+  if (!Array.isArray(config.masterBlock) || !config.masterBlock.length) {
     throw new Error(errorStart + " 'targetBlock' must be a non-empty array.");
   }
 
-  if (!Array.isArray(config.targetZone) || !config.targetZone.length) {
+  if (!Array.isArray(config.target) || !config.target.length) {
     // throw new Error(errorStart + " 'targetZone' must be a non-empty array.");
   }
 

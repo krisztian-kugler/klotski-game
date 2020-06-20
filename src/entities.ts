@@ -9,7 +9,7 @@ export interface EntityConfig {
   border?: boolean;
 }
 
-export abstract class Entity {
+export class Entity {
   elements: HTMLElement[] = [];
 
   constructor(public cells: GridCell[], public id: number) {}
@@ -17,7 +17,7 @@ export abstract class Entity {
   protected createElements(classList: string[]) {
     for (const cell of this.cells) {
       const element = document.createElement("div");
-      element.classList.add(...classList);
+      element.classList.add("entity", ...classList);
       element.style.gridRowStart = cell.row.toString();
       element.style.gridColumnStart = cell.column.toString();
       element.setAttribute("entity-id", this.id.toString());
@@ -27,16 +27,29 @@ export abstract class Entity {
 }
 
 // Mixins
-const BorderMixin = (superclass: new (...args: any[]) => any) =>
+const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
   class extends superclass {
     constructor(...args: any[]) {
       super(...args);
     }
 
-    protected addBorder() {}
+    protected addBorder() {
+      for (const element of this.elements) {
+        element.classList.add("border-top", "border-bottom", "border-left", "border-right");
+        const row = +element.style.gridRowStart;
+        const column = +element.style.gridColumnStart;
+
+        for (const cell of this.cells) {
+          if (cell.column === column && cell.row === row - 1) element.classList.remove("border-top");
+          if (cell.column === column && cell.row === row + 1) element.classList.remove("border-bottom");
+          if (cell.row === row && cell.column === column - 1) element.classList.remove("border-left");
+          if (cell.row === row && cell.column === column + 1) element.classList.remove("border-right");
+        }
+      }
+    }
   };
 
-const UnlockMixin = (superclass: new (...args: any[]) => any) =>
+const UnlockMixin = (superclass: new (...args: any[]) => Entity) =>
   class extends superclass {
     constructor(...args: any[]) {
       super(...args);
@@ -49,12 +62,13 @@ const UnlockMixin = (superclass: new (...args: any[]) => any) =>
     }
   };
 
-export class Block extends Entity {
-  constructor(cells: GridCell[], id: number, public isTarget = false) {
+export class Block extends BorderMixin(Entity) {
+  constructor(cells: GridCell[], id: number, public master = false) {
     super(cells, id);
     const classList = ["block"];
-    if (isTarget) classList.push("target-block");
+    if (master) classList.push("block--master");
     this.createElements(classList);
+    this.addBorder();
     this.elements.forEach(element => {
       element.setAttribute("draggable", "");
     });
@@ -68,14 +82,15 @@ export class Target extends Entity {
   }
 }
 
-export class Wall extends Entity {
+export class Wall extends BorderMixin(Entity) {
   constructor(cells: GridCell[], id: number) {
     super(cells, id);
     this.createElements(["wall"]);
+    this.addBorder();
   }
 }
 
-export class Gate extends Entity {
+export class Gate extends UnlockMixin(Entity) {
   constructor(cells: GridCell[], id: number) {
     super(cells, id);
     this.createElements(["gate"]);

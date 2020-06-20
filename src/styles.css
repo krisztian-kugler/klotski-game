@@ -43,6 +43,10 @@ header {
   border-left-color: rgb(0, 0, 0, 0.5);
 }
 
+.entity {
+  position: relative;
+}
+
 .block {
   background-color: #e2c95f;
   background-color: #f7d156;
@@ -52,7 +56,7 @@ header {
   align-items: center;
 }
 
-.target-block {
+.block--master {
   background-color: #e24343;
 }
 
@@ -84,20 +88,21 @@ header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
 
-.target-zone {
+.target {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.target-zone:after,
-.block:after {
+.target:after {
   display: block;
+  content: "";
   width: 50%;
   height: 50%;
   border-radius: 50%;
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-  background-image: linear-gradient(transparent, rgb(0, 0, 0, 0.1));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+  border-top: 1px solid rgba(0, 0, 0, 0.75);
+  background-image: linear-gradient(rgb(0, 0, 0, 0.1), transparent);
   transform: rotate(-45deg);
 }
