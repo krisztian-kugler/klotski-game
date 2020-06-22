@@ -73,5 +73,9 @@ const board = new Board({
   ],
 });
 
-board.mount(".main");
+board.mount(".board-slot");
 console.log(board);
+
+document.querySelector(".menu").addEventListener("click", function () {
+  this.classList.toggle("open");
+});

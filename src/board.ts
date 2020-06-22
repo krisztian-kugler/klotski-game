@@ -12,6 +12,7 @@ export class Board {
   element: HTMLDivElement;
   matrix: BoardMatrix;
   moveCount = 0;
+  unit: number;
   rows: number;
   columns: number;
   target: Target;
@@ -206,6 +207,10 @@ export class Board {
     } else {
       throw new Error(`Board cannot be mounted on '${selector}'. Element doesn't exist.`);
     }
+  }
+
+  resize(unit: number) {
+    this.element.style.gridTemplate = `repeat(${this.rows}, ${unit}px) / repeat(${this.columns}, ${unit}px)`;
   }
 
   reset() {
