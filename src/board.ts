@@ -4,7 +4,7 @@ import { BoardMatrix } from "./board-matrix";
 import { validateBoard } from "./validity-checker";
 import { toZeroBased } from "./utils";
 
-const unit = 80;
+const unit = 60;
 
 type GridAxis = "gridRowStart" | "gridColumnStart";
 
