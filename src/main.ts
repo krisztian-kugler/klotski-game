@@ -12,6 +12,11 @@ const board = new Board({
   ],
   blocks: [
     [
+      { column: 1, row: 1 },
+      { column: 2, row: 1 },
+      { column: 1, row: 2 },
+    ],
+    [
       { column: 4, row: 4 },
       { column: 4, row: 5 },
     ],

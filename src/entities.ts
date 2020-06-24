@@ -44,23 +44,35 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
         let top, bottom, left, right;
 
         if (this.cells.find(cell => cell.column === column && cell.row === row - 1)) {
-          element.classList.add("edge-top");
           top = true;
         }
 
         if (this.cells.find(cell => cell.column === column && cell.row === row + 1)) {
-          element.classList.add("edge-bottom");
           bottom = true;
         }
 
         if (this.cells.find(cell => cell.row === row && cell.column === column - 1)) {
-          element.classList.add("edge-left");
           left = true;
         }
 
         if (this.cells.find(cell => cell.row === row && cell.column === column + 1)) {
-          element.classList.add("edge-right");
           right = true;
+        }
+
+        if (top && bottom) {
+          element.classList.add("edge", "edge-top-bottom");
+        } else if (top) {
+          element.classList.add("edge", "edge-top");
+        } else if (bottom) {
+          element.classList.add("edge", "edge-bottom");
+        }
+
+        if (left && right) {
+          element.classList.add("edge", "edge-left-right");
+        } else if (left) {
+          element.classList.add("edge", "edge-left");
+        } else if (right) {
+          element.classList.add("edge", "edge-right");
         }
 
         if (top && left && this.cells.find(cell => cell.row === row - 1 && cell.column === column - 1)) {
@@ -106,8 +118,8 @@ const UnlockMixin = (superclass: new (...args: any[]) => Entity) =>
 export class Block extends BorderMixin(Entity) {
   constructor(cells: GridCell[], id: number, public master = false) {
     super(cells, id);
-    const classList = ["block"];
-    if (master) classList.push("block--master");
+    let classList = ["block"];
+    if (master) classList = ["master-block"];
     this.createElements(classList);
     this.addBorder();
     this.elements.forEach(element => {

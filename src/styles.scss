@@ -54,6 +54,7 @@ body {
 
 .board {
   display: grid;
+  padding: 0.125rem;
   background-color: rgb(128, 157, 208);
 }
 
@@ -72,64 +73,87 @@ body {
 }
 
 .block {
-  background-color: #f7d156;
+  cursor: pointer;
+
+  > div,
+  &:before,
+  &:after {
+    background-color: #f7d156;
+  }
+}
+
+.master-block {
+  cursor: pointer;
+
+  > div,
+  &:before,
+  &:after {
+    background-color: #e24343;
+  }
+}
+
+.block,
+.master-block {
   cursor: pointer;
 }
 
-.block--master {
-  background-color: #e24343;
-}
-
 .wall {
-  background-color: #2b5bbf;
+  > div,
+  &:before,
+  &:after {
+    background-color: #2b5bbf;
+  }
 }
 
 .gate {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #0dda6e;
-}
+  > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #0dda6e;
+  }
 
-.border-right {
-  border-right: 1px solid rgba(0, 0, 0, 0.5);
-}
-
-.border-top {
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.border-left {
-  border-left: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.border-bottom {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  &:before,
+  &:after {
+    background-color: #0dda6e;
+  }
 }
 
 .edge {
   &-top:before {
-    grid-area: 1 / 2 / 2 / 2;
+    content: "";
+    grid-row: 1 / span 2;
+    grid-column: 2;
   }
 
   &-bottom:before {
-    grid-area: 2 / 2 / 3 / 2;
+    content: "";
+    grid-row: 2 / span 2;
+    grid-column: 2;
   }
 
   &-top-bottom:before {
-    grid-area: 1 / 2 / 3 / 2;
+    content: "";
+    grid-row: 1 / span 3;
+    grid-column: 2;
   }
 
   &-left:after {
-    grid-area: 2 / 1 / 2 / 2;
+    content: "";
+    grid-row: 2;
+    grid-column: 1 / span 2;
   }
 
   &-right:after {
-    grid-area: 2 / 2 / 2 / 3;
+    content: "";
+    grid-row: 2;
+    grid-column: 2 / span 2;
   }
 
   &-left-right:after {
-    grid-area: 2 / 1 / 2 / 3;
+    content: "";
+    grid-row: 2;
+    grid-column: 1 / span 3;
   }
 }
 
@@ -157,31 +181,26 @@ body {
   }
 }
 
-.target {
+.target .core {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.target:after {
+.target .core:after,
+.unlocked > .core:after {
   content: "";
+  position: relative;
+  z-index: 1;
   display: block;
-  width: 60%;
-  height: 60%;
+  width: 50%;
+  height: 50%;
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-.unlocked:after {
-  display: block;
-  content: "";
-  width: 50%;
-  height: 50%;
-  border-radius: 50%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
-  border-top: 1px solid rgba(0, 0, 0, 0.75);
-  background-image: linear-gradient(rgba(0, 0, 0, 0.2), transparent);
-  transform: rotate(-45deg);
+.unlocked > .core:after {
+  background-color: rgb(128, 157, 208);
 }
 
 .openable {
@@ -199,6 +218,6 @@ body {
   }
 
   to {
-    opacity: 0.25;
+    opacity: 0.5;
   }
 }
