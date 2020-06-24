@@ -21,6 +21,10 @@ export class Entity {
       element.style.gridRowStart = cell.row.toString();
       element.style.gridColumnStart = cell.column.toString();
       element.setAttribute("entity-id", this.id.toString());
+
+      const core = document.createElement("div");
+      core.classList.add("core");
+      element.append(core);
       this.elements.push(element);
     }
   }
@@ -35,15 +39,52 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
 
     protected addBorder() {
       for (const element of this.elements) {
-        element.classList.add("border-top", "border-bottom", "border-left", "border-right");
         const row = +element.style.gridRowStart;
         const column = +element.style.gridColumnStart;
+        let top, bottom, left, right;
 
-        for (const cell of this.cells) {
-          if (cell.column === column && cell.row === row - 1) element.classList.remove("border-top");
-          if (cell.column === column && cell.row === row + 1) element.classList.remove("border-bottom");
-          if (cell.row === row && cell.column === column - 1) element.classList.remove("border-left");
-          if (cell.row === row && cell.column === column + 1) element.classList.remove("border-right");
+        if (this.cells.find(cell => cell.column === column && cell.row === row - 1)) {
+          element.classList.add("edge-top");
+          top = true;
+        }
+
+        if (this.cells.find(cell => cell.column === column && cell.row === row + 1)) {
+          element.classList.add("edge-bottom");
+          bottom = true;
+        }
+
+        if (this.cells.find(cell => cell.row === row && cell.column === column - 1)) {
+          element.classList.add("edge-left");
+          left = true;
+        }
+
+        if (this.cells.find(cell => cell.row === row && cell.column === column + 1)) {
+          element.classList.add("edge-right");
+          right = true;
+        }
+
+        if (top && left && this.cells.find(cell => cell.row === row - 1 && cell.column === column - 1)) {
+          const corner = document.createElement("div");
+          corner.classList.add("corner", "corner-top-left");
+          element.append(corner);
+        }
+
+        if (top && right && this.cells.find(cell => cell.row === row - 1 && cell.column === column + 1)) {
+          const corner = document.createElement("div");
+          corner.classList.add("corner", "corner-top-right");
+          element.append(corner);
+        }
+
+        if (bottom && left && this.cells.find(cell => cell.row === row + 1 && cell.column === column - 1)) {
+          const corner = document.createElement("div");
+          corner.classList.add("corner", "corner-bottom-left");
+          element.append(corner);
+        }
+
+        if (bottom && right && this.cells.find(cell => cell.row === row + 1 && cell.column === column + 1)) {
+          const corner = document.createElement("div");
+          corner.classList.add("corner", "corner-bottom-right");
+          element.append(corner);
         }
       }
     }
@@ -90,12 +131,13 @@ export class Wall extends BorderMixin(Entity) {
   }
 }
 
-export class Gate extends Entity {
+export class Gate extends BorderMixin(Entity) {
   unlocked = false;
 
   constructor(cells: GridCell[], id: number) {
     super(cells, id);
     this.createElements(["gate"]);
+    this.addBorder();
   }
 
   unlockElement(cell: GridCell) {

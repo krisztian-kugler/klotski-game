@@ -1,12 +1,13 @@
+import "./styles.scss";
 import { Board } from "./board";
 
 const board = new Board({
-  columns: 10,
   rows: 11,
+  columns: 10,
   gates: [
     [
       { row: 9, column: 5 },
-      { column: 6, row: 9 },
+      { row: 9, column: 6 },
     ],
   ],
   blocks: [
