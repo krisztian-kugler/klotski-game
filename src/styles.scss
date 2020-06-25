@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
+
 * {
   padding: 0;
   margin: 0;
@@ -8,7 +10,7 @@ body {
   position: relative;
   background-color: rgb(43, 91, 191);
   background-color: #3d81c7;
-  font-family: sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 .menu {
@@ -48,6 +50,14 @@ body {
   padding-top: 4rem;
 }
 
+.title {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .board-slot {
   display: flex;
   justify-content: center;
@@ -58,6 +68,7 @@ body {
   padding: 0.125rem;
   background-color: rgb(128, 157, 208);
   background-color: #0c1933;
+  background-color: #263544;
 }
 
 .entity {
@@ -104,6 +115,7 @@ body {
   &:before,
   &:after {
     background-color: #2b5bbf;
+    background-color: #3d81c7;
   }
 }
 
@@ -198,7 +210,7 @@ body {
   display: block;
   width: 50%;
   height: 50%;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .unlocked > .core:after {

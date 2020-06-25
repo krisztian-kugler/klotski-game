@@ -1,8 +1,21 @@
 import "./styles.scss";
 import { Board } from "./board";
-import { oldestGame, oldestGame2, oldestGame3, oldestGame4, oldestGame5, oldestGame6, agatka, doggie } from "./set1";
+import {
+  oldestGame,
+  oldestGame2,
+  oldestGame3,
+  oldestGame4,
+  oldestGame5,
+  oldestGame6,
+  agatka,
+  doggie,
+  success,
+  bone,
+  fortune,
+  sunshine,
+} from "./set1";
 
-const board = new Board(doggie);
+const board = new Board(sunshine);
 
 board.mount(".board-slot");
 console.log(board);
