@@ -13,9 +13,10 @@ import {
   bone,
   fortune,
   sunshine,
+  fool,
 } from "./set1";
 
-const board = new Board(sunshine);
+const board = new Board(fool);
 
 board.mount(".board-slot");
 console.log(board);
