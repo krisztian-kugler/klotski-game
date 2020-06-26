@@ -14,9 +14,12 @@ import {
   fortune,
   sunshine,
   fool,
+  solomon,
+  kleopatra,
+  shark,
 } from "./set1";
 
-const board = new Board(fool);
+const board = new Board(shark);
 
 board.mount(".board-slot");
 console.log(board);
