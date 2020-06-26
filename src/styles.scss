@@ -11,7 +11,45 @@ body {
   background-color: rgb(43, 91, 191);
   background-color: #3d81c7;
   background-color: #214367;
+  background-color: #425669;
+  background-color: #52616f;
   font-family: "Montserrat", sans-serif;
+}
+
+.header {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  color: white;
+
+  .burger-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 1.5rem;
+    height: 1rem;
+    cursor: pointer;
+
+    .line {
+      height: 0.125rem;
+      background-color: white;
+    }
+  }
+
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  .version {
+    font-weight: 600;
+  }
 }
 
 .menu {
@@ -24,6 +62,7 @@ body {
   height: 100vh;
   background-color: rgb(22, 23, 27);
   background-color: rgb(12, 25, 51);
+  background-color: #263544;
   color: white;
   transform: translateY(calc(-100vh + 4rem));
   transition: transform 200ms;
@@ -31,16 +70,6 @@ body {
 
 .menu.open {
   transform: translateY(0);
-}
-
-.burger-icon {
-  position: fixed;
-  z-index: 2;
-  top: 1rem;
-  left: 1rem;
-  width: 2rem;
-  height: 2rem;
-  background-color: white;
 }
 
 .main {
@@ -70,7 +99,7 @@ body {
   background-color: rgb(128, 157, 208);
   background-color: #0c1933;
   background-color: #263544;
-  box-shadow: 0 0 0 26px #3d81c7;
+  // box-shadow: 0 0 0 26px #3d81c7;
 }
 
 .entity {
@@ -220,6 +249,12 @@ body {
   background-color: #0c1933;
 }
 
+.target .core:after {
+  animation-name: targetPulse;
+  animation-iteration-count: infinite;
+  animation-duration: 5s;
+}
+
 .openable {
   cursor: pointer;
   animation-name: pulse;
@@ -236,5 +271,27 @@ body {
 
   to {
     opacity: 0.5;
+  }
+}
+
+@keyframes targetPulse {
+  0% {
+    background-color: rgb(14, 19, 25);
+  }
+
+  40% {
+    background-color: rgb(14, 19, 25);
+  }
+
+  50% {
+    background-color: #e24343;
+  }
+
+  60% {
+    background-color: rgb(14, 19, 25);
+  }
+
+  100% {
+    background-color: rgb(14, 19, 25);
   }
 }
