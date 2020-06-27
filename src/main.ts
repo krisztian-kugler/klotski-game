@@ -24,6 +24,6 @@ const board = new Board(shark);
 board.mount(".board-slot");
 console.log(board);
 
-document.querySelector(".menu").addEventListener("click", function () {
-  this.classList.toggle("open");
+document.querySelector(".burger-icon").addEventListener("click", function () {
+  document.querySelector(".home-screen").classList.toggle("hidden");
 });

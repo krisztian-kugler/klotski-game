@@ -23,13 +23,14 @@ body {
   left: 0;
   right: 0;
   height: 4rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   align-items: center;
   padding: 0 2rem;
   color: white;
 
   .burger-icon {
+    justify-self: left;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -44,18 +45,21 @@ body {
   }
 
   .logo {
+    justify-self: center;
     font-size: 1.5rem;
   }
 
   .version {
+    justify-self: right;
     font-weight: 600;
   }
 }
 
-.menu {
+.home-screen {
   position: absolute;
   z-index: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -64,12 +68,36 @@ body {
   background-color: rgb(12, 25, 51);
   background-color: #263544;
   color: white;
-  transform: translateY(calc(-100vh + 4rem));
-  transition: transform 200ms;
+  transform: translateY(0);
+  transition: transform 150ms ease-in-out;
+
+  &.hidden {
+    transform: translateY(calc(-100vh + 4rem));
+  }
 }
 
-.menu.open {
-  transform: translateY(0);
+.set-list {
+  display: flex;
+  list-style: none;
+
+  .set-item {
+    display: flex;
+    align-items: center;
+    height: 2.5rem;
+    padding: 0 1rem;
+    background-color: transparent;
+    color: #67b2ff;
+    font-family: "Montserrat";
+    font-size: 1rem;
+    transition: background-color 150ms;
+    cursor: pointer;
+
+    &.active {
+      border-radius: 0.25rem;
+      background-color: #3d81c7;
+      color: white;
+    }
+  }
 }
 
 .main {
