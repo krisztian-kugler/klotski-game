@@ -12,3 +12,9 @@ export interface BoardConfig {
   walls?: GridCell[][];
   gates?: GridCell[][];
 }
+
+export interface Puzzle {
+  name: string;
+  difficulty: "easy" | "medium" | "hard";
+  layout: BoardConfig;
+}
