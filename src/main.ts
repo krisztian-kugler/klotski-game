@@ -19,11 +19,8 @@ import {
   shark,
 } from "./set1";
 
-const board = new Board(oldestGame);
-const board2 = new Board(sunshine);
-
+const board = new Board(sunshine);
 board.mount(".board-slot");
-board2.mount(".board-slot");
 console.log(board);
 
 document.querySelector(".burger-icon").addEventListener("click", function () {

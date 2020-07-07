@@ -24,7 +24,7 @@ export class Entity {
 
       const core = document.createElement("div");
       core.classList.add("core");
-      element.append(core);
+      // element.append(core);
       this.elements.push(element);
     }
   }
@@ -43,21 +43,10 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
         const column = +element.style.gridColumnStart;
         let top, bottom, left, right;
 
-        if (this.cells.find(cell => cell.column === column && cell.row === row - 1)) {
-          top = true;
-        }
-
-        if (this.cells.find(cell => cell.column === column && cell.row === row + 1)) {
-          bottom = true;
-        }
-
-        if (this.cells.find(cell => cell.row === row && cell.column === column - 1)) {
-          left = true;
-        }
-
-        if (this.cells.find(cell => cell.row === row && cell.column === column + 1)) {
-          right = true;
-        }
+        if (this.cells.find(cell => cell.column === column && cell.row === row - 1)) top = true;
+        if (this.cells.find(cell => cell.column === column && cell.row === row + 1)) bottom = true;
+        if (this.cells.find(cell => cell.row === row && cell.column === column - 1)) left = true;
+        if (this.cells.find(cell => cell.row === row && cell.column === column + 1)) right = true;
 
         if (top && bottom) {
           element.classList.add("edge", "edge-top-bottom");
@@ -65,6 +54,8 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
           element.classList.add("edge", "edge-top");
         } else if (bottom) {
           element.classList.add("edge", "edge-bottom");
+        } else {
+          // element.classList.add("edge", "edge-center");
         }
 
         if (left && right) {
@@ -75,7 +66,51 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
           element.classList.add("edge", "edge-right");
         }
 
-        if (top && left && this.cells.find(cell => cell.row === row - 1 && cell.column === column - 1)) {
+        if (!top && !bottom && !left && !right) {
+          const core = document.createElement("div");
+          core.classList.add("core");
+          element.append(core);
+        }
+
+        if (
+          top &&
+          ((left && this.cells.find(cell => cell.row === row - 1 && cell.column === column - 1)) ||
+            (right && this.cells.find(cell => cell.row === row - 1 && cell.column === column + 1)))
+        ) {
+          const corner = document.createElement("div");
+          corner.classList.add("corner");
+
+          if (left && right) {
+            corner.classList.add("corner-top-left-right");
+          } else if (left) {
+            corner.classList.add("corner-top-left");
+          } else if (right) {
+            corner.classList.add("corner-top-right");
+          }
+
+          element.append(corner);
+        }
+
+        if (
+          bottom &&
+          ((left && this.cells.find(cell => cell.row === row + 1 && cell.column === column - 1)) ||
+            (right && this.cells.find(cell => cell.row === row + 1 && cell.column === column + 1)))
+        ) {
+          const corner = document.createElement("div");
+          corner.classList.add("corner");
+
+          if (left && right) {
+            corner.classList.add("corner-bottom-left-right");
+          } else if (left) {
+            corner.classList.add("corner-bottom-left");
+          } else if (right) {
+            corner.classList.add("corner-bottom-right");
+          }
+
+          element.append(corner);
+        }
+
+        /* if (top && left && this.cells.find(cell => cell.row === row - 1 && cell.column === column - 1)) {
           const corner = document.createElement("div");
           corner.classList.add("corner", "corner-top-left");
           element.append(corner);
@@ -97,7 +132,7 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
           const corner = document.createElement("div");
           corner.classList.add("corner", "corner-bottom-right");
           element.append(corner);
-        }
+        } */
       }
     }
   };
