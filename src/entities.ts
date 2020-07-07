@@ -48,13 +48,13 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
         if (this.cells.find(cell => cell.row === row && cell.column === column - 1)) left = true;
         if (this.cells.find(cell => cell.row === row && cell.column === column + 1)) right = true;
 
-        if (top && bottom) element.classList.add("edge", "edge-top-bottom");
-        else if (top) element.classList.add("edge", "edge-top");
-        else if (bottom) element.classList.add("edge", "edge-bottom");
+        if (top && bottom) element.classList.add("edge-top-bottom");
+        else if (top) element.classList.add("edge-top");
+        else if (bottom) element.classList.add("edge-bottom");
 
-        if (left && right) element.classList.add("edge", "edge-left-right");
-        else if (left) element.classList.add("edge", "edge-left");
-        else if (right) element.classList.add("edge", "edge-right");
+        if (left && right) element.classList.add("edge-left-right");
+        else if (left) element.classList.add("edge-left");
+        else if (right) element.classList.add("edge-right");
 
         if (!top && !bottom && !left && !right) element.classList.add("center");
 
@@ -64,7 +64,6 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
             (right && this.cells.find(cell => cell.row === row - 1 && cell.column === column + 1)))
         ) {
           const corner = document.createElement("div");
-          corner.classList.add("corner");
 
           if (left && right) corner.classList.add("corner-top-left-right");
           else if (left) corner.classList.add("corner-top-left");
@@ -79,7 +78,6 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
             (right && this.cells.find(cell => cell.row === row + 1 && cell.column === column + 1)))
         ) {
           const corner = document.createElement("div");
-          corner.classList.add("corner");
 
           if (left && right) corner.classList.add("corner-bottom-left-right");
           else if (left) corner.classList.add("corner-bottom-left");
@@ -87,30 +85,6 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
 
           element.append(corner);
         }
-
-        /* if (top && left && this.cells.find(cell => cell.row === row - 1 && cell.column === column - 1)) {
-          const corner = document.createElement("div");
-          corner.classList.add("corner", "corner-top-left");
-          element.append(corner);
-        }
-
-        if (top && right && this.cells.find(cell => cell.row === row - 1 && cell.column === column + 1)) {
-          const corner = document.createElement("div");
-          corner.classList.add("corner", "corner-top-right");
-          element.append(corner);
-        }
-
-        if (bottom && left && this.cells.find(cell => cell.row === row + 1 && cell.column === column - 1)) {
-          const corner = document.createElement("div");
-          corner.classList.add("corner", "corner-bottom-left");
-          element.append(corner);
-        }
-
-        if (bottom && right && this.cells.find(cell => cell.row === row + 1 && cell.column === column + 1)) {
-          const corner = document.createElement("div");
-          corner.classList.add("corner", "corner-bottom-right");
-          element.append(corner);
-        } */
       }
     }
   };
