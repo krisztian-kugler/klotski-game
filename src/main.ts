@@ -19,7 +19,7 @@ import {
   shark,
 } from "./set1";
 
-const board = new Board(sunshine);
+const board = new Board(fortune);
 board.mount(".board-slot");
 console.log(board);
 

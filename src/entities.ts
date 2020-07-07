@@ -22,9 +22,9 @@ export class Entity {
       element.style.gridColumnStart = cell.column.toString();
       element.setAttribute("entity-id", this.id.toString());
 
-      const core = document.createElement("div");
+      /* const core = document.createElement("div");
       core.classList.add("core");
-      // element.append(core);
+      element.append(core); */
       this.elements.push(element);
     }
   }
@@ -48,29 +48,15 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
         if (this.cells.find(cell => cell.row === row && cell.column === column - 1)) left = true;
         if (this.cells.find(cell => cell.row === row && cell.column === column + 1)) right = true;
 
-        if (top && bottom) {
-          element.classList.add("edge", "edge-top-bottom");
-        } else if (top) {
-          element.classList.add("edge", "edge-top");
-        } else if (bottom) {
-          element.classList.add("edge", "edge-bottom");
-        } else {
-          // element.classList.add("edge", "edge-center");
-        }
+        if (top && bottom) element.classList.add("edge", "edge-top-bottom");
+        else if (top) element.classList.add("edge", "edge-top");
+        else if (bottom) element.classList.add("edge", "edge-bottom");
 
-        if (left && right) {
-          element.classList.add("edge", "edge-left-right");
-        } else if (left) {
-          element.classList.add("edge", "edge-left");
-        } else if (right) {
-          element.classList.add("edge", "edge-right");
-        }
+        if (left && right) element.classList.add("edge", "edge-left-right");
+        else if (left) element.classList.add("edge", "edge-left");
+        else if (right) element.classList.add("edge", "edge-right");
 
-        if (!top && !bottom && !left && !right) {
-          const core = document.createElement("div");
-          core.classList.add("core");
-          element.append(core);
-        }
+        if (!top && !bottom && !left && !right) element.classList.add("center");
 
         if (
           top &&
@@ -80,13 +66,9 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
           const corner = document.createElement("div");
           corner.classList.add("corner");
 
-          if (left && right) {
-            corner.classList.add("corner-top-left-right");
-          } else if (left) {
-            corner.classList.add("corner-top-left");
-          } else if (right) {
-            corner.classList.add("corner-top-right");
-          }
+          if (left && right) corner.classList.add("corner-top-left-right");
+          else if (left) corner.classList.add("corner-top-left");
+          else if (right) corner.classList.add("corner-top-right");
 
           element.append(corner);
         }
@@ -99,13 +81,9 @@ const BorderMixin = (superclass: new (...args: any[]) => Entity) =>
           const corner = document.createElement("div");
           corner.classList.add("corner");
 
-          if (left && right) {
-            corner.classList.add("corner-bottom-left-right");
-          } else if (left) {
-            corner.classList.add("corner-bottom-left");
-          } else if (right) {
-            corner.classList.add("corner-bottom-right");
-          }
+          if (left && right) corner.classList.add("corner-bottom-left-right");
+          else if (left) corner.classList.add("corner-bottom-left");
+          else if (right) corner.classList.add("corner-bottom-right");
 
           element.append(corner);
         }
